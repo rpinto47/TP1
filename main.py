@@ -11,10 +11,13 @@ def is_prime(n):
         return False
     i = 5
     while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
+        if n % i == 0:
+            return False
+        if n % (i + 2) == 0:
             return False
         i += 6
     return True
+
 
 def find_max_prime(start, end, result_queue):
     max_prime = 2
