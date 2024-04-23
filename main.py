@@ -1,13 +1,13 @@
-import time
 import multiprocessing
+import time
 
 def is_prime(n):
     """Check if n is prime."""
     if n <= 1:
         return False
-    if n <= 3:
+    elif n <= 3:
         return True
-    if n % 2 == 0 or n % 3 == 0:
+    elif n % 2 == 0 or n % 3 == 0:
         return False
     i = 5
     while i * i <= n:
@@ -16,45 +16,42 @@ def is_prime(n):
         i += 6
     return True
 
-def find_max_prime(max_time, result_list):
-    """Find the largest prime within a timeout."""
-    max_prime = 0
-    start_time = time.time()
-    current_number = 1
-    while time.time() - start_time < max_time:
-        if is_prime(current_number):
-            max_prime = current_number
-        current_number += 1
-    result_list.append(max_prime)
+def find_max_prime(start, end, result_queue):
+    max_prime = 2
+    for i in range(start, end, 2):
+        if is_prime(i):
+            max_prime = i
+    result_queue.put(max_prime)
 
-def find_max_prime_parallel(timeout):
-    """Finds the largest prime within a timeout using parallel processing."""
-    start_time = time.time()
+def find_max_prime_multiprocess(timeout):
+    result_queue = multiprocessing.Queue()
     num_processes = 4
     processes = []
-    result_list = []
 
-    # Criação dos processos
-    for _ in range(num_processes):
-        process = multiprocessing.Process(target=find_max_prime, args=(timeout, result_list))
-        processes.append(process)
-        process.start()
+    chunk_size = 10000
+    start = 3
+    end = start + chunk_size
 
-    # Espera os processos terminarem ou até o tempo limite
-    for process in processes:
-        process.join(timeout=timeout - (time.time() - start_time))
+    start_time = time.time()
 
-    # Encerra processos que ainda estiverem em execução após o tempo limite
-    for process in processes:
-        if process.is_alive():
-            process.terminate()
+    while time.time() - start_time < timeout:
+        for _ in range(num_processes):
+            p = multiprocessing.Process(target=find_max_prime, args=(start, end, result_queue))
+            processes.append(p)
+            p.start()
+            start = end + 1
+            end = start + chunk_size
 
-    # Encontra o maior número primo
-    if result_list:
-        max_prime = max(result_list)
-        print("Largest prime found:", max_prime)
-    else:
-        print("No prime numbers found within the timeout.")
+        for p in processes:
+            p.join()
+
+        max_prime = 2
+        while not result_queue.empty():
+            prime = result_queue.get()
+            if prime > max_prime:
+                max_prime = prime
+
+    print("Maior valor primo: ", max_prime)
 
 if __name__ == '__main__':
-    find_max_prime_parallel(5)
+    find_max_prime_multiprocess(5)
