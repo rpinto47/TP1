@@ -1,5 +1,5 @@
 import time
-import threading
+import multiprocessing
 
 def is_prime(n):
     """Check if n is prime."""
@@ -30,23 +30,31 @@ def find_max_prime(max_time, result_list):
 def find_max_prime_parallel(timeout):
     """Finds the largest prime within a timeout using parallel processing."""
     start_time = time.time()
-    num_threads = 4
-    threads = []
+    num_processes = 4
+    processes = []
     result_list = []
 
-    # Criação das threads
-    for _ in range(num_threads):
-        thread = threading.Thread(target=find_max_prime, args=(timeout, result_list))
-        threads.append(thread)
-        thread.start()
+    # Criação dos processos
+    for _ in range(num_processes):
+        process = multiprocessing.Process(target=find_max_prime, args=(timeout, result_list))
+        processes.append(process)
+        process.start()
 
-    # Espera as threads terminarem ou até o tempo limite
-    for thread in threads:
-        thread.join(timeout=timeout - (time.time() - start_time))
+    # Espera os processos terminarem ou até o tempo limite
+    for process in processes:
+        process.join(timeout=timeout - (time.time() - start_time))
+
+    # Encerra processos que ainda estiverem em execução após o tempo limite
+    for process in processes:
+        if process.is_alive():
+            process.terminate()
 
     # Encontra o maior número primo
-    max_prime = max(result_list)
-    print("Largest prime found:", max_prime)
+    if result_list:
+        max_prime = max(result_list)
+        print("Largest prime found:", max_prime)
+    else:
+        print("No prime numbers found within the timeout.")
 
 if __name__ == '__main__':
     find_max_prime_parallel(5)
