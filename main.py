@@ -4,7 +4,19 @@ from multiprocessing import Pool
 
 
 def is_prime(n):
-    """Check if a number is prime with optimized checks."""
+    """
+    Check if a given number `n` is prime.
+
+    This function uses an optimized method to determine if `n` is a prime number.
+    It checks for divisibility by 2 and 3, and then checks odd numbers
+    using a step size of 6 for efficiency.
+
+    Args:
+        n (int): The number to check for primality.
+
+    Returns:
+        bool: True if `n` is a prime number, False otherwise.
+    """
     if n < 2:
         return False
     if n in (2, 3):
@@ -19,7 +31,20 @@ def is_prime(n):
 
 
 def worker(start, end, timeout):
-    """Worker function to find primes within a range with a timeout."""
+    """
+    Find the largest prime number within a specified range and within a given timeout.
+
+    This function iterates through numbers from `start` to `end`, checking for primes.
+    It stops if it finds a prime greater than `local_max`, or if it exceeds the timeout.
+
+    Args:
+        start (int): The start of the range.
+        end (int): The end of the range.
+        timeout (float): The maximum time allowed for this process in seconds.
+
+    Returns:
+        int: The largest prime found within the specified range and timeout.
+    """
     local_max = 1
     start_time = time.time()
 
@@ -33,7 +58,21 @@ def worker(start, end, timeout):
 
 
 def find_max_prime(max_num, process_number, timeout):
-    """Find the largest prime within a given range using multiple processes with a timeout."""
+    """
+    Find the largest prime number in the range from 1 to `max_num` using multiple processes.
+
+    This function creates `process_number` processes, each responsible for a different range
+    of numbers, to find the largest prime. The range is divided into segments, and each process
+    has a timeout for safety.
+
+    Args:
+        max_num (int): The upper limit of the range to check for primes.
+        process_number (int): The number of processes to use for parallel computation.
+        timeout (float): The maximum time allowed for each process in seconds.
+
+    Returns:
+        None: This function prints the maximum prime found, its number of digits, and the timeout used.
+    """
     step = max_num // process_number
     intervals = [(i * step, (i + 1) * step, timeout) for i in range(process_number)]
 
@@ -53,15 +92,11 @@ if __name__ == '__main__':
         process_number = int(input("Enter the number of processes to use: "))
         timeout = float(input("Enter the timeout in seconds: "))
 
-        # Default to the number of CPU cores if process_number is zero or less
         if process_number <= 0:
             process_number = multiprocessing.cpu_count()
 
-        if max_num <= 2:
-            raise ValueError("Maximum number must be greater than 2.")
-
-        if timeout <= 0:
-            raise ValueError("Timeout must be greater than zero.")
+        if max_num <= 2 or timeout <= 0:
+            raise ValueError("Maximum number must be greater than 2 and timeout must be greater than zero.")
 
         find_max_prime(max_num, process_number, timeout)
 
